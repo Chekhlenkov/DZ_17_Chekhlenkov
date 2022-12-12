@@ -69,7 +69,6 @@ genres_schema = GenreSchema(many=True)
 class MoviesView(Resource):
     def get(self):
         movies_query = db.session.query(Movie)
-
         director_id = request.args.get("director_id")
         if director_id is not None:
             movies_query = movies_query.filter(Movie.director_id == director_id)
@@ -126,7 +125,7 @@ class DirectorsView(Resource):
     def post(self):
         request_json = request.json
         new_director = Director(**request_json)
-        with db.session.begin():
+        with app.app_context():
             db.session.add(new_director)
             db.session.commit()
         return "Director created", 201
