@@ -6,6 +6,7 @@ from marshmallow import Schema, fields
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['RESTX_JSON'] = {'ensure_ascii': False}
 db = SQLAlchemy(app)
 
 
@@ -20,7 +21,7 @@ class Movie(db.Model):
     genre_id = db.Column(db.Integer, db.ForeignKey("genre.id"))
     genre = db.relationship("Genre")
     director_id = db.Column(db.Integer, db.ForeignKey("director.id"))
-    director = db.relationship("Director")
+
 
 class Director(db.Model):
     __tablename__ = 'director'
@@ -33,14 +34,6 @@ class Genre(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255))
 
-class MovieSchema(Schema):
-    id = fields.Int()
-    title = fields.Str()
-    description = fields.Str()
-    trailer = fields.Str()
-    year = fields.Int()
-    rating = fields.Str()
-    director = fields.Int()
 
 class DirectorSchema(Schema):
     id = fields.Int()
@@ -49,6 +42,16 @@ class DirectorSchema(Schema):
 class GenreSchema(Schema):
     id = fields.Int()
     name = fields.Str()
+
+class MovieSchema(Schema):
+    id = fields.Int()
+    title = fields.Str()
+    description = fields.Str()
+    trailer = fields.Str()
+    year = fields.Int()
+    rating = fields.Str()
+    director_id = fields.Int()
+
 
 api = Api(app)
 
@@ -86,14 +89,13 @@ class MoviesView(Resource):
         with db.session.begin():
             db.session.add(new_movie)
 
-        return "User created", 201
+        return "Movie created", 201
 
-movie_ns.route("/<int:id>")
+@movie_ns.route("/<int:id>")
 class MovieView(Resource):
     def get(self, id):
         movie = db.session.query(Movie).get(id)
-        if not movie:
-            return "User not found", 404
+
         return movie_schema.dump(movie), 200
 
 
